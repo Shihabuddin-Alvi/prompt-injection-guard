@@ -22,3 +22,10 @@
 - deepset, JasperLS, safeguard: `text` + `label` (0=benign, 1=injection)
 - Lakera: `text` + `similarity` (float), threshold at 0.5 for binary label
 - WildGuardMix: `prompt` column, `prompt_harm_label` for classification, held-out only
+
+## Lakera Gandalf: Positive-Only Source
+
+Similarity scores range from 0.825 to 0.975 (min/max across train split).
+No examples exist below the 0.5 threshold. The dataset records successful
+password extractions only. It contributes label=1 examples exclusively.
+This is by design. Do not expect Lakera to contribute any label=0 rows.
