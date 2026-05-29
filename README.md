@@ -44,3 +44,19 @@ Three layers: data ingestion, training, serving. Synthetic data feedback loop co
 - Live demo: TBD
 - Model card: TBD
 - LinkedIn: AlviAnalytics
+
+## Baseline Metrics (Claude Haiku Zero-Shot)
+
+Evaluated on 200 sampled examples from the held-out test set.
+
+| Metric | Score |
+|--------|-------|
+| Macro F1 | 0.93 |
+| Benign precision | 0.91 |
+| Benign recall | 0.99 |
+| Injection precision | 0.99 |
+| Injection recall | 0.85 |
+| Accuracy | 0.94 |
+
+Haiku misses 15% of injections (12/78 false negatives) while producing almost no false alarms on benign inputs (1/122).
+DeBERTa v1 target: macro F1 > 0.93, injection recall > 0.85.
