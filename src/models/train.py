@@ -86,7 +86,7 @@ def train(
         load_best_model_at_end=True,
         metric_for_best_model="macro_f1",
         logging_steps=50,
-        fp16=True,
+        fp16=False,
         report_to="none",
     )
 
