@@ -5,12 +5,14 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "accelerate>=1.13.0",
     "anthropic>=0.105.2",
     "datasets>=4.8.5",
     "datasketch>=1.10.0",
     "duckdb>=1.5.3",
     "python-dotenv>=1.2.2",
     "scikit-learn>=1.8.0",
+    "transformers>=5.9.0",
 ]
 
 [dependency-groups]
