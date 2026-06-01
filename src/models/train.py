@@ -35,8 +35,11 @@ def load_splits(
 
 
 def tokenize(df: pd.DataFrame, tokenizer: AutoTokenizer) -> Dataset:
+    df = df.copy()
+    df["label"] = df["label"].astype(int)
     dataset = Dataset.from_pandas(
-        df.rename(columns={"input_text": "text", "label": "labels"})
+        df.rename(columns={"input_text": "text", "label": "labels"}),
+        preserve_index=False,
     )
 
     def tokenize_fn(batch):
