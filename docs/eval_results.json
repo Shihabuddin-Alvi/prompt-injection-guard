@@ -1,0 +1,5 @@
+{
+  "macro_f1": 0.9956576711352547,
+  "n_test": 1754,
+  "model_path": "alvi42/prompt-injection-guard-v1"
+}
