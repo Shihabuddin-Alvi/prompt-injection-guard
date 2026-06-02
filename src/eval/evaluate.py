@@ -10,7 +10,6 @@ from sklearn.metrics import (
 )
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
-from datasets import Dataset
 import pandas as pd
 
 DB_PATH = "data/unified.duckdb"
@@ -32,32 +31,21 @@ def predict(df: pd.DataFrame, model_path: str) -> np.ndarray:
     model = AutoModelForSequenceClassification.from_pretrained(model_path)
     model.eval()
 
-    dataset = Dataset.from_pandas(
-        df[["input_text"]].rename(columns={"input_text": "text"}),
-        preserve_index=False,
-    )
-
-    def tokenize_fn(batch):
-        return tokenizer(
-            batch["text"],
-            truncation=True,
-            padding="max_length",
-            max_length=MAX_LENGTH,
-        )
-
-    dataset = dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
-    dataset.set_format("torch")
-
+    texts = df["input_text"].tolist()
     all_preds = []
     batch_size = 32
+
     with torch.no_grad():
-        for i in range(0, len(dataset), batch_size):
-            batch = dataset[i : i + batch_size]
-            outputs = model(
-                input_ids=batch["input_ids"],
-                attention_mask=batch["attention_mask"],
-                token_type_ids=batch.get("token_type_ids"),
+        for i in range(0, len(texts), batch_size):
+            batch_texts = texts[i : i + batch_size]
+            encoded = tokenizer(
+                batch_texts,
+                truncation=True,
+                padding="max_length",
+                max_length=MAX_LENGTH,
+                return_tensors="pt",
             )
+            outputs = model(**encoded)
             preds = torch.argmax(outputs.logits, dim=1).numpy()
             all_preds.extend(preds)
 
