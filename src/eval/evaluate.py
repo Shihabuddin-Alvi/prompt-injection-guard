@@ -52,6 +52,25 @@ def predict(df: pd.DataFrame, model_path: str) -> np.ndarray:
     return np.array(all_preds)
 
 
+def bootstrap_f1_ci(
+    labels: np.ndarray,
+    preds: np.ndarray,
+    n_bootstrap: int = 1000,
+    ci: float = 95.0,
+    seed: int = 42,
+) -> tuple[float, float]:
+    rng = np.random.default_rng(seed)
+    scores = []
+    n = len(labels)
+    for _ in range(n_bootstrap):
+        idx = rng.integers(0, n, size=n)
+        score = f1_score(labels[idx], preds[idx], average="macro", zero_division=0)
+        scores.append(score)
+    lower = np.percentile(scores, (100 - ci) / 2)
+    upper = np.percentile(scores, 100 - (100 - ci) / 2)
+    return float(lower), float(upper)
+
+
 def evaluate(model_path: str, output_path: str = "docs/eval_results.json"):
     print(f"Loading test set from {DB_PATH}")
     df = load_test_set(DB_PATH)
@@ -63,6 +82,9 @@ def evaluate(model_path: str, output_path: str = "docs/eval_results.json"):
 
     macro_f1 = f1_score(labels, preds, average="macro")
     print(f"\nMacro F1: {macro_f1:.4f}")
+
+    ci_lower, ci_upper = bootstrap_f1_ci(labels, preds)
+    print(f"95% CI: ({ci_lower:.4f}, {ci_upper:.4f})")
 
     print("\nPer-category recall:")
     for cat in df["attack_category"].unique():
@@ -80,6 +102,8 @@ def evaluate(model_path: str, output_path: str = "docs/eval_results.json"):
 
     results = {
         "macro_f1": macro_f1,
+        "ci_lower": ci_lower,
+        "ci_upper": ci_upper,
         "n_test": len(df),
         "model_path": model_path,
     }
