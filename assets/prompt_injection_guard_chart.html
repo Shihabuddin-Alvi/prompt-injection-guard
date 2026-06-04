@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Injection Guard v1 — Per-Category F1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #F4F2EE;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+
+  .card {
+    background: #FFFFFF;
+    width: 1200px;
+    min-height: 627px;
+    padding: 52px 64px 44px;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid #E4E1D9;
+  }
+
+  /* Header */
+  .header { margin-bottom: 40px; }
+
+  .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: #1A6B3C;
+    margin-bottom: 10px;
+    font-weight: 500;
+  }
+
+  .title {
+    font-size: 26px;
+    font-weight: 600;
+    color: #111111;
+    line-height: 1.25;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .title .accent { color: #1A6B3C; }
+
+  .subtitle {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #888580;
+    letter-spacing: 0.01em;
+  }
+
+  .subtitle b { color: #555250; font-weight: 500; }
+
+  /* Chart */
+  .chart { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+
+  .row { display: flex; align-items: center; gap: 14px; }
+
+  .label {
+    width: 156px;
+    text-align: right;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #777470;
+    flex-shrink: 0;
+    letter-spacing: 0.02em;
+  }
+
+  .track {
+    flex: 1;
+    height: 34px;
+    background: #F4F2EE;
+    position: relative;
+  }
+
+  .bar {
+    height: 100%;
+    position: relative;
+  }
+
+  .bar.green { background: #1A6B3C; }
+  .bar.orange { background: #C0622B; }
+
+  /* Highlight the top performer (role_play is the weakest — highlight perfect bars with slight shine) */
+  .bar.perfect { background: #1A6B3C; }
+
+  .score {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 500;
+    width: 60px;
+    flex-shrink: 0;
+  }
+
+  .score.green { color: #1A6B3C; }
+  .score.orange { color: #C0622B; }
+
+  .count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #ABAAA6;
+    width: 72px;
+    flex-shrink: 0;
+  }
+
+  /* Role play annotation */
+  .annotation {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #C0622B;
+    background: #FDF3EE;
+    border: 0.5px solid #F0C4A8;
+    padding: 2px 8px;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    margin-left: 4px;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 36px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    border-top: 1px solid #ECEAE4;
+    padding-top: 24px;
+  }
+
+  .legend { display: flex; gap: 20px; align-items: center; }
+
+  .leg-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #888580;
+    letter-spacing: 0.03em;
+  }
+
+  .leg-dot {
+    width: 10px;
+    height: 10px;
+    flex-shrink: 0;
+  }
+
+  .macro { text-align: right; }
+
+  .macro-val {
+    font-size: 40px;
+    font-weight: 600;
+    color: #111111;
+    letter-spacing: -0.03em;
+    line-height: 1;
+  }
+
+  .macro-val .accent { color: #1A6B3C; }
+
+  .macro-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #ABAAA6;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* x-axis tick labels */
+  .axis-row {
+    display: flex;
+    align-items: center;
+    padding-left: 170px;
+    margin-bottom: 4px;
+  }
+
+  .axis-ticks {
+    flex: 1;
+    display: flex;
+    justify-content: space-between;
+    padding-right: 136px;
+  }
+
+  .axis-tick {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #BFBDB8;
+    letter-spacing: 0.04em;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+
+  <div class="header">
+    <div class="tag">Prompt Injection Guard v1 &nbsp;/&nbsp; DeBERTa-v3-base</div>
+    <div class="title">Per-category F1 score &nbsp;<span class="accent">— 5 of 6 categories hit perfect 1.0</span></div>
+    <div class="subtitle">Test set <b>n=1,754</b> &nbsp;·&nbsp; Overall macro F1: <b>0.9957</b> &nbsp;·&nbsp; 95% CI: 0.9924–0.9982</div>
+  </div>
+
+  <div class="axis-row">
+    <div class="axis-ticks">
+      <span class="axis-tick">0.96</span>
+      <span class="axis-tick">0.97</span>
+      <span class="axis-tick">0.98</span>
+      <span class="axis-tick">0.99</span>
+      <span class="axis-tick">1.00</span>
+    </div>
+  </div>
+
+  <div class="chart" id="chart"></div>
+
+  <div class="footer">
+    <div class="legend">
+      <div class="leg-item">
+        <div class="leg-dot" style="background:#1A6B3C;"></div>
+        F1 ≥ 0.98
+      </div>
+      <div class="leg-item">
+        <div class="leg-dot" style="background:#C0622B;"></div>
+        F1 &lt; 0.98
+      </div>
+    </div>
+    <div class="macro">
+      <div class="macro-val">0.<span class="accent">9957</span></div>
+      <div class="macro-label">Overall Macro F1</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const MIN = 0.96;
+const MAX = 1.004;
+
+const data = [
+  { label: "direct",             f1: 1.0000, n: 92   },
+  { label: "jailbreak",          f1: 1.0000, n: 26   },
+  { label: "system_prompt_leak", f1: 1.0000, n: 12   },
+  { label: "indirect",           f1: 1.0000, n: 1    },
+  { label: "unknown",            f1: 0.9962, n: 1566 },
+  { label: "role_play",          f1: 0.9644, n: 57   },
+];
+
+const chart = document.getElementById('chart');
+
+data.forEach(d => {
+  const pct = ((d.f1 - MIN) / (MAX - MIN)) * 100;
+  const isGreen = d.f1 >= 0.98;
+  const cls = isGreen ? 'green' : 'orange';
+  const isPerfect = d.f1 === 1.0;
+
+  const row = document.createElement('div');
+  row.className = 'row';
+
+  row.innerHTML = `
+    <div class="label">${d.label}</div>
+    <div class="track">
+      <div class="bar ${cls}${isPerfect ? ' perfect' : ''}" style="width:${pct.toFixed(2)}%"></div>
+    </div>
+    <div class="score ${cls}">${d.f1.toFixed(4)}</div>
+    <div class="count">n=${d.n.toLocaleString()}</div>
+    ${d.label === 'role_play' ? '<span class="annotation">lowest — needs more data</span>' : ''}
+  `;
+
+  chart.appendChild(row);
+});
+</script>
+</body>
+</html>
