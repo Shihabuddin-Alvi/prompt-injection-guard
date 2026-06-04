@@ -59,8 +59,9 @@ green_patch = mpatches.Patch(color="#1A6B3C", label="F1 ≥ 0.98")
 orange_patch = mpatches.Patch(color="#C0622B", label="F1 < 0.98")
 ax.legend(
     handles=[green_patch, orange_patch],
-    loc="upper left",
-    fontsize=10,
+    loc="upper right",
+    bbox_to_anchor=(1.0, 1.15),
+    fontsize=9.5,
     frameon=True,
     framealpha=1,
     edgecolor="#E4E1D9",
