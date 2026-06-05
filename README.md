@@ -1,6 +1,6 @@
 # Prompt Injection Guard
 
-Prompt injection detection trained with an iterative synthetic data pipeline. Sub-100ms inference. Open methodology, reproducible benchmarks, public demo.
+Prompt injection detection trained with an iterative synthetic data pipeline. Classifier v1: macro F1 0.9957 on 1,754 held-out examples. Sub-100ms inference target. Open methodology, reproducible benchmarks.
 
 ## What It Does
 
@@ -35,6 +35,35 @@ Evaluated on 200 sampled examples from the held-out test set.
 | Accuracy | 0.94 |
 
 Haiku misses 15% of injections (12/78 false negatives). DeBERTa v1 target: macro F1 > 0.93, injection recall > 0.85.
+
+## Classifier v1 Results
+
+Fine-tuned DeBERTa-v3-base on 8,183 training examples. Evaluated on 1,754 held-out test examples.
+
+| Metric | Score |
+|--------|-------|
+| Macro F1 | 0.9957 |
+| 95% Bootstrap CI | (0.9924, 0.9982) |
+| Accuracy | 1.00 |
+| Injection recall | 1.00 |
+| Injection precision | 0.99 |
+
+### Per-Category F1
+
+![Per-category F1](assets/v1_per_category_f1.png)
+
+| Category | F1 | n |
+|----------|-----|---|
+| direct | 1.0000 | 92 |
+| jailbreak | 1.0000 | 26 |
+| system_prompt_leak | 1.0000 | 12 |
+| indirect | 1.0000 | 1 |
+| unknown | 0.9962 | 1,566 |
+| role_play | 0.9644 | 57 |
+
+Role-play is the weakest category. Legitimate persona requests sit on the boundary with injection attempts. This is the synthetic data target for v2.
+
+Model card: [alvi42/prompt-injection-guard-v1](https://huggingface.co/alvi42/prompt-injection-guard-v1)
 
 ## Stack
 
