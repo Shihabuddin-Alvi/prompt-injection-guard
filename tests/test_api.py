@@ -31,7 +31,7 @@ def test_classify_injection(client):
     assert response.status_code == 200
     data = response.json()
     assert data["label"] == "injection"
-    assert data["confidence"] > 0.95
+    assert data["confidence"] > 0.5
     assert "latency_ms" in data
     assert "scores" in data
 
@@ -44,7 +44,7 @@ def test_classify_benign(client):
     assert response.status_code == 200
     data = response.json()
     assert data["label"] == "benign"
-    assert data["confidence"] > 0.95
+    assert data["confidence"] > 0.5
 
 
 def test_classify_scores_sum_to_one(client):

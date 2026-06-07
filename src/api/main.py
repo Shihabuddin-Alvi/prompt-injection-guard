@@ -2,18 +2,21 @@
 
 import time
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 import duckdb
 import numpy as np
-import torch
 from fastapi import FastAPI
+from optimum.onnxruntime import ORTModelForSequenceClassification
 from pydantic import BaseModel
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
+from transformers import AutoTokenizer
 from dotenv import load_dotenv
+
 
 load_dotenv()
 
 MODEL_PATH = "alvi42/prompt-injection-guard-v1"
+ONNX_DIR = Path("checkpoints/v1-onnx-int8")
 DB_PATH = "data/unified.duckdb"
 MAX_LENGTH = 256
 LABELS = ["benign", "injection"]
@@ -64,12 +67,11 @@ def log_request(input_text: str, prediction: str, confidence: float, latency_ms:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    print(f"Loading model from {MODEL_PATH}")
+    print(f"Loading ONNX model from {ONNX_DIR}")
     app.state.tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-    app.state.model = AutoModelForSequenceClassification.from_pretrained(MODEL_PATH)
-    app.state.model.eval()
+    app.state.model = ORTModelForSequenceClassification.from_pretrained(ONNX_DIR)
     init_logging_table()
-    print("Model loaded.")
+    print("ONNX model loaded.")
     yield
     print("Shutting down.")
 
@@ -95,11 +97,11 @@ def classify(request: ClassifyRequest):
         truncation=True,
         padding="max_length",
         max_length=MAX_LENGTH,
-        return_tensors="pt",
+        return_tensors="np",
     )
-    with torch.no_grad():
-        logits = app.state.model(**encoded).logits
-    probs = torch.softmax(logits, dim=1).squeeze().numpy()
+    logits = app.state.model(**encoded).logits
+    probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
+    probs = probs.squeeze()
     pred_idx = int(np.argmax(probs))
     latency_ms = (time.perf_counter() - t0) * 1000
 
