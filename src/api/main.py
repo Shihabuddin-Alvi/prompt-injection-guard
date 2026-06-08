@@ -1,5 +1,6 @@
 """FastAPI serving layer for the prompt injection classifier."""
 
+import asyncio
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -38,7 +39,7 @@ def init_logging_table():
     con.execute(
         """
         CREATE TABLE IF NOT EXISTS request_log (
-            id INTEGER PRIMARY KEY,
+            id INTEGER,
             input_text TEXT,
             prediction TEXT,
             confidence FLOAT,
@@ -54,11 +55,8 @@ def log_request(input_text: str, prediction: str, confidence: float, latency_ms:
     con = duckdb.connect(DB_PATH)
     con.execute(
         """
-        INSERT INTO request_log (id, input_text, prediction, confidence, latency_ms)
-        VALUES (
-            (SELECT COALESCE(MAX(id), 0) + 1 FROM request_log),
-            ?, ?, ?, ?
-        )
+        INSERT INTO request_log (input_text, prediction, confidence, latency_ms)
+        VALUES (?, ?, ?, ?)
     """,
         [input_text, prediction, confidence, latency_ms],
     )
@@ -89,11 +87,10 @@ def health():
     return {"status": "ok"}
 
 
-@app.post("/classify", response_model=ClassifyResponse)
-def classify(request: ClassifyRequest):
+def _run_inference(text: str) -> tuple[str, float, dict, float]:
     t0 = time.perf_counter()
     encoded = app.state.tokenizer(
-        request.text,
+        text,
         truncation=True,
         padding="max_length",
         max_length=MAX_LENGTH,
@@ -104,15 +101,22 @@ def classify(request: ClassifyRequest):
     probs = probs.squeeze()
     pred_idx = int(np.argmax(probs))
     latency_ms = (time.perf_counter() - t0) * 1000
-
     label = LABELS[pred_idx]
     confidence = float(probs[pred_idx])
+    scores = {LABELS[i]: float(probs[i]) for i in range(len(LABELS))}
+    return label, confidence, scores, latency_ms
 
-    log_request(request.text, label, confidence, latency_ms)
 
+@app.post("/classify", response_model=ClassifyResponse)
+async def classify(request: ClassifyRequest):
+    loop = asyncio.get_event_loop()
+    label, confidence, scores, latency_ms = await loop.run_in_executor(
+        None, _run_inference, request.text
+    )
+    loop.run_in_executor(None, log_request, request.text, label, confidence, latency_ms)
     return ClassifyResponse(
         label=label,
         confidence=confidence,
-        scores={LABELS[i]: float(probs[i]) for i in range(len(LABELS))},
+        scores=scores,
         latency_ms=round(latency_ms, 2),
     )
