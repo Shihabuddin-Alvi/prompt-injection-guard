@@ -34,3 +34,17 @@ class ClassifyUser(HttpUser):
             "/classify",
             json={"text": SAMPLE_TEXTS[idx]},
         )
+
+
+BATCH_TEXTS = SAMPLE_TEXTS * 4  # 40 texts, take first 32
+
+
+class BatchClassifyUser(HttpUser):
+    wait_time = constant_throughput(1)
+
+    @task
+    def classify_batch(self):
+        self.client.post(
+            "/classify-batch",
+            json={"texts": BATCH_TEXTS[:32]},
+        )

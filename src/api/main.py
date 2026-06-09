@@ -34,6 +34,16 @@ class ClassifyResponse(BaseModel):
     latency_ms: float
 
 
+class BatchClassifyRequest(BaseModel):
+    texts: list[str]
+
+
+class BatchClassifyResponse(BaseModel):
+    results: list[ClassifyResponse]
+    total_texts: int
+    total_latency_ms: float
+
+
 def init_logging_table():
     con = duckdb.connect(DB_PATH)
     con.execute(
@@ -107,6 +117,34 @@ def _run_inference(text: str) -> tuple[str, float, dict, float]:
     return label, confidence, scores, latency_ms
 
 
+def _run_batch_inference(texts: list[str]) -> list[tuple[str, float, dict, float]]:
+    t0 = time.perf_counter()
+    encoded = app.state.tokenizer(
+        texts,
+        truncation=True,
+        padding="max_length",
+        max_length=MAX_LENGTH,
+        return_tensors="np",
+    )
+    logits = app.state.model(**encoded).logits
+    probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
+    total_ms = (time.perf_counter() - t0) * 1000
+    per_item_ms = total_ms / len(texts)
+    results = []
+    for i in range(len(texts)):
+        p = probs[i]
+        pred_idx = int(np.argmax(p))
+        results.append(
+            (
+                LABELS[pred_idx],
+                float(p[pred_idx]),
+                {LABELS[j]: float(p[j]) for j in range(len(LABELS))},
+                round(per_item_ms, 2),
+            )
+        )
+    return results
+
+
 @app.post("/classify", response_model=ClassifyResponse)
 async def classify(request: ClassifyRequest):
     loop = asyncio.get_event_loop()
@@ -119,4 +157,38 @@ async def classify(request: ClassifyRequest):
         confidence=confidence,
         scores=scores,
         latency_ms=round(latency_ms, 2),
+    )
+
+
+@app.post("/classify-batch", response_model=BatchClassifyResponse)
+async def classify_batch(request: BatchClassifyRequest):
+    t0 = time.perf_counter()
+    loop = asyncio.get_event_loop()
+    results = await loop.run_in_executor(None, _run_batch_inference, request.texts)
+    total_latency_ms = (time.perf_counter() - t0) * 1000
+    responses = [
+        ClassifyResponse(
+            label=label,
+            confidence=confidence,
+            scores=scores,
+            latency_ms=latency_ms,
+        )
+        for label, confidence, scores, latency_ms in results
+    ]
+    loop.run_in_executor(
+        None,
+        lambda: [
+            log_request(
+                request.texts[i],
+                responses[i].label,
+                responses[i].confidence,
+                responses[i].latency_ms,
+            )
+            for i in range(len(responses))
+        ],
+    )
+    return BatchClassifyResponse(
+        results=responses,
+        total_texts=len(responses),
+        total_latency_ms=round(total_latency_ms, 2),
     )
