@@ -1,14 +1,14 @@
 # Prompt Injection Guard
 
-Prompt injection detection trained with an iterative synthetic data pipeline. Classifier v1: macro F1 0.9957 on 1,754 held-out examples. Sub-100ms inference target. Open methodology, reproducible benchmarks.
+Prompt injection detection built with an iterative synthetic data pipeline. Classifier v1: macro F1 0.9957 on 1,754 held-out examples. Sub-100ms inference target. Open methodology, reproducible benchmarks.
 
 ## What It Does
 
 Detects prompt injection attempts in user inputs to LLM applications.
 
-- Real-time API: sub-100ms p99 latency per request
-- Batch API: async processing at 500+ examples per second
-- Synthetic data loop: classifier v1 failure modes feed a targeted data generator, v2 trains on the augmented dataset and shows measurable improvement
+Real-time API: sub-100ms p99 latency per request
+Batch API: async processing at 500+ examples per second
+Synthetic loop: v1 failure modes feed a targeted data generator. V2 trains on the augmented set and shows measurable improvement on those same cases.
 
 ## Datasets
 
@@ -127,4 +127,4 @@ uv run python3 -m src.data.split
 
 ## Why This Exists
 
-Maps directly to three responsibility lines in the Anthropic Safeguards ML/Research Engineer posting: detecting misuse at scale, developing synthetic data pipelines, and deploying mitigations for prompt injection attacks.
+The Anthropic Safeguards ML/Research Engineer posting lists three things: detecting misuse at scale, building synthetic data pipelines, deploying mitigations for prompt injection. This project is a direct answer to all three.
