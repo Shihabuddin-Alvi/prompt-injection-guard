@@ -117,12 +117,25 @@ Response:
 
 ## Quickstart
 
+### Docker (recommended)
+
+```bash
+git clone https://github.com/Shihabuddin-Alvi/prompt-injection-guard.git
+cd prompt-injection-guard
+echo "HF_TOKEN=your_token_here" > .env
+docker compose up
+```
+
+The API starts at `http://localhost:8000`. Swagger docs at `http://localhost:8000/docs`.
+
+### Local (no Docker)
+
 ```bash
 git clone https://github.com/Shihabuddin-Alvi/prompt-injection-guard.git
 cd prompt-injection-guard
 uv sync
-uv run python3 -m src.data.unify
-uv run python3 -m src.data.split
+export HF_TOKEN=your_token_here
+uv run uvicorn src.api.main:app --port 8000
 ```
 
 ## Why This Exists
