@@ -16,6 +16,7 @@ dependencies = [
     "optimum[onnxruntime]>=2.1.0",
     "python-dotenv>=1.2.2",
     "scikit-learn>=1.8.0",
+    "sentence-transformers>=5.5.1",
     "transformers==4.47.0",
     "uvicorn>=0.49.0",
 ]
