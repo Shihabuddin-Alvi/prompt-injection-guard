@@ -1,0 +1,22 @@
+{
+  "model": "alvi42/prompt-injection-guard-v2",
+  "training_set": "split_train_v2 (8183 original + 1687 synthetic)",
+  "eval_set": "split_test (n=1754)",
+  "macro_f1": 0.9932,
+  "benign_precision": 0.99,
+  "benign_recall": 1.0,
+  "benign_f1": 1.0,
+  "injection_precision": 0.99,
+  "injection_recall": 0.9904,
+  "injection_f1": 0.99,
+  "training_epochs": 3,
+  "epoch_results": [
+    {"epoch": 1, "train_loss": 0.098, "val_loss": 0.0648, "macro_f1": 0.9862},
+    {"epoch": 2, "train_loss": 0.018, "val_loss": 0.0378, "macro_f1": 0.9932},
+    {"epoch": 3, "train_loss": 0.0093, "val_loss": 0.0446, "macro_f1": 0.9932}
+  ],
+  "v1_macro_f1": 0.9957,
+  "delta_vs_v1": -0.0025,
+  "risk_gate_3": "NOT_MET_ON_STANDARD_TEST",
+  "notes": "Both models near-saturate split_test. Standard test set insufficient to show improvement from targeted synthetic data. v2 trained on 1687 synthetic examples targeting 5 failure clusters (FN-1 multilingual, FN-2 short inputs, FN-3 indirect, FP-1 coding context, FP-2 role-play)."
+}
