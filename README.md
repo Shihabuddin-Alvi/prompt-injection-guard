@@ -48,6 +48,37 @@ Fine-tuned DeBERTa-v3-base on 8,183 training examples. Evaluated on 1,754 held-o
 | Injection recall | 1.00 |
 | Injection precision | 0.99 |
 
+## Classifier v2: Synthetic Data Iteration
+
+After v1, ran a full failure mode analysis: pulled every misclassified example
+from val and test sets (17 total), read each one by hand, and grouped them into
+8 distinct failure patterns. Generated 1,700 targeted synthetic examples with
+Claude Sonnet, one prompt template per pattern. Deduplicated against existing
+training data via sentence embeddings. Cross-validated every label with Claude
+Haiku as an independent judge (99.2% agreement). Retrained on the combined
+9,870-example set.
+
+![v1 vs v2 comparison](assets/v1_vs_v2_comparison.png)
+
+### Honest result
+
+| Benchmark | v1 | v2 | Delta |
+|---|---|---|---|
+| split_test (n=1,754) | 0.9957 | 0.9932 | -0.0025 |
+
+The standard test set is saturated. v1 already missed only 7 of 1,754 examples,
+leaving no room to show measurable improvement on that benchmark. The synthetic
+data targets failure patterns (non-English injections, very short injections,
+indirect jailbreaks) that barely appear in split_test.
+
+On a held-out adversarial slice built from the failure categories (n=651,
+injection-heavy), v2 achieves 0.99 injection recall and 1.00 benign recall.
+Full methodology, failure analysis, and synthetic data pipeline documented in
+[docs/v2_results.md](docs/v2_results.md), [docs/failures.md](docs/failures.md),
+and [docs/synthetic_quality.md](docs/synthetic_quality.md).
+
+Model card: [alvi42/prompt-injection-guard-v2](https://huggingface.co/alvi42/prompt-injection-guard-v2)
+
 ### Per-Category F1
 
 ![Per-category F1](assets/v1_per_category_f1.png)
