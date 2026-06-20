@@ -20,13 +20,36 @@ FP-2 (legitimate role-play), FP-1 (instruction-adjacent coding).
 | 2 | 0.0180 | 0.0378 | 0.9932 |
 | 3 | 0.0093 | 0.0446 | 0.9932 |
 
-## v1 vs v2 on split_test (n=1,754)
+## v1 vs v2 on adversarial slice (n=651, injection-heavy, role_play + indirect + all injection-labeled)
 
-| Model | Macro F1 | Injection recall | Benign recall |
-|---|---|---|---|
-| v1 | 0.9957 | 1.0000 | 1.0000 |
-| v2 | 0.9932 | 0.9904 | 1.0000 |
-| Delta | -0.0025 | -0.0096 | 0.0000 |
+| Metric | v1 | v2 |
+|---|---|---|
+| Benign precision | 0.83 | 0.74 |
+| Benign recall | 0.95 | 1.00 |
+| Benign F1 | 0.88 | 0.85 |
+| Injection precision | 1.00 | 1.00 |
+| Injection recall | 0.99 | 0.99 |
+| Injection F1 | 1.00 | 0.99 |
+| Macro F1 | 0.94 | 0.92 |
+
+v1 scores higher than v2 on this slice. The benign sample is small (n=20), so
+this single-point comparison should not be over-read, but the result is
+consistent with the standard test set finding: v2 does not measurably beat v1
+on any benchmark constructed so far.
+
+## Final Risk Gate 3 Verdict
+
+**NOT MET**, confirmed on two independent benchmarks (standard test set and
+adversarial slice). The synthetic data pipeline and failure analysis
+methodology are sound and fully documented, but the resulting v2 model is not
+a measurable improvement over v1 by macro F1 on either evaluation set
+available. A properly constructed held-out benchmark, built directly from the
+8 failure clusters rather than filtered from existing splits, would be
+required to validate whether the synthetic data's targeted patterns transfer.
+That benchmark does not yet exist and is out of scope for the remaining build
+days.
+
+v1 remains the deployed model.
 
 ## Risk Gate 3 Assessment
 
