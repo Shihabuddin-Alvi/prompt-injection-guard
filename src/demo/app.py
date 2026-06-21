@@ -1,18 +1,27 @@
+import os
+
 import gradio as gr
 import numpy as np
+from dotenv import load_dotenv
 from optimum.onnxruntime import ORTModelForSequenceClassification
 from transformers import AutoTokenizer
 
+load_dotenv()
+
 MODEL_PATH = "alvi42/prompt-injection-guard-v1"
-ONNX_DIR = "checkpoints/v1-onnx-int8"
 MAX_LENGTH = 256
 LABELS = ["benign", "injection"]
 
+HF_TOKEN = os.environ.get("HF_TOKEN")
+
 print(f"Loading tokenizer from {MODEL_PATH}")
-tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
-print(f"Loading ONNX model from {ONNX_DIR}")
+tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
+print(f"Loading ONNX model from {MODEL_PATH}/onnx")
 model = ORTModelForSequenceClassification.from_pretrained(
-    ONNX_DIR, file_name="model_quantized.onnx"
+    MODEL_PATH,
+    subfolder="onnx",
+    file_name="model_quantized.onnx",
+    token=HF_TOKEN,
 )
 print("Model loaded.")
 
