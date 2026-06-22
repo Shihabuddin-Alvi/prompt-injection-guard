@@ -2,8 +2,9 @@ import os
 
 import gradio as gr
 import numpy as np
+import onnxruntime as ort
 from dotenv import load_dotenv
-from optimum.onnxruntime import ORTModelForSequenceClassification
+from huggingface_hub import hf_hub_download
 from transformers import AutoTokenizer
 
 load_dotenv()
@@ -16,13 +17,16 @@ HF_TOKEN = os.environ.get("HF_TOKEN")
 
 print(f"Loading tokenizer from {MODEL_PATH}")
 tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH, token=HF_TOKEN)
-print(f"Loading ONNX model from {MODEL_PATH}/onnx")
-model = ORTModelForSequenceClassification.from_pretrained(
-    MODEL_PATH,
-    subfolder="onnx",
-    file_name="model_quantized.onnx",
+
+print("Downloading ONNX model from Hub")
+onnx_path = hf_hub_download(
+    repo_id=MODEL_PATH,
+    filename="onnx/model_quantized.onnx",
     token=HF_TOKEN,
 )
+
+print(f"Loading ONNX session from {onnx_path}")
+session = ort.InferenceSession(onnx_path)
 print("Model loaded.")
 
 
@@ -34,7 +38,9 @@ def classify(text: str) -> dict:
         max_length=MAX_LENGTH,
         return_tensors="np",
     )
-    logits = model(**encoded).logits
+    valid_inputs = {i.name for i in session.get_inputs()}
+    inputs = {k: v for k, v in encoded.items() if k in valid_inputs}
+    logits = session.run(None, inputs)[0]
     probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
     probs = probs.squeeze()
     return {LABELS[i]: float(probs[i]) for i in range(len(LABELS))}
