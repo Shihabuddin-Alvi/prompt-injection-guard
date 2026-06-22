@@ -49,7 +49,7 @@ def classify(text: str) -> dict:
 demo = gr.Interface(
     fn=classify,
     inputs="text",
-    outputs="label",
+    outputs=gr.Label(num_top_classes=2),
     title="Prompt Injection Guard",
     description=(
         "DeBERTa-v3-base fine-tuned to detect prompt injection attempts. "
