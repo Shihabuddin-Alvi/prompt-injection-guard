@@ -2,6 +2,14 @@
 
 Prompt injection detection built with an iterative synthetic data pipeline. Classifier v1: macro F1 0.9957 on 1,754 held-out examples. Sub-100ms inference target. Open methodology, reproducible benchmarks.
 
+## Architecture
+
+![Architecture Diagram](assets/architecture.png)
+
+## Metrics
+
+![Metrics Dashboard](assets/metrics_dashboard.png)
+
 ## What It Does
 
 Detects prompt injection attempts in user inputs to LLM applications.
