@@ -192,3 +192,25 @@ Total after MinHash LSH deduplication: 11,690 examples. Schema and dedup methodo
 - **sentence-transformers** — embedding-based dedup of synthetic data
 - **Hugging Face Spaces** — public demo
 - **Docker Compose** — local reproducibility
+
+## Why This Exists
+
+This project maps to three responsibility lines in the Anthropic Safeguards ML/Research Engineer posting:
+
+- "Develop classifiers to detect misuse and anomalous behavior at scale" — the DeBERTa classifier and evaluation harness
+- "Developing synthetic data pipelines for training classifiers" — the failure clustering and Claude-driven generation loop
+- "Developing and deploying mitigations for prompt injection attacks" — the FastAPI serving layer and live demo
+
+The Safeguards team builds systems that identify harmful use of Claude. Prompt injection is one of the highest-risk attack surfaces in agentic deployments. This project demonstrates the full workflow: detect, evaluate, iterate, deploy.
+
+## Talking Points
+
+**The iteration loop** — not the model, the methodology. The model is a means to the end. The loop is: train, read every error, cluster failures, generate targeted synthetic data, filter for quality, retrain, measure honestly.
+
+**Failure mode analysis** — 17 misclassifications on 3,507 examples. Each one read manually. Grouped into 8 clusters. Role-play boundary cases are the hardest: legitimate persona requests and injection attempts look identical at the token level.
+
+**Synthetic data quality controls** — embedding dedup against the training set (cosine > 0.92 dropped), Claude Haiku cross-validation at 99.2% agreement. The augmented set is trustworthy because the rejection rate is documented.
+
+**Honest v2 result** — v2 did not beat v1 on the standard benchmark. The benchmark was saturated. This is documented, not hidden. The correct next step is an adversarial benchmark built from the failure clusters themselves.
+
+**Deployment tradeoffs** — ONNX int8 over PyTorch: 43% latency reduction, predictions within tolerance. p99 under 100ms on a single CPU core. Confidence scores run 65-73% on textbook injection phrases — correct classification, known calibration gap, documented.
