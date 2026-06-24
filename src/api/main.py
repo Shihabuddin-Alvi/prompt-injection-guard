@@ -1,21 +1,25 @@
 """FastAPI serving layer for the prompt injection classifier."""
 
 import asyncio
+import logging
 import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 import duckdb
 import numpy as np
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from optimum.onnxruntime import ORTModelForSequenceClassification
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+from scipy.special import softmax
 from transformers import AutoTokenizer
-from dotenv import load_dotenv
-
 
 load_dotenv()
 
+logger = logging.getLogger(__name__)
+
+MAX_BATCH_SIZE = 128
 MODEL_PATH = "alvi42/prompt-injection-guard-v1"
 ONNX_DIR = Path("checkpoints/v1-onnx-int8")
 DB_PATH = "data/unified.duckdb"
@@ -36,6 +40,15 @@ class ClassifyResponse(BaseModel):
 
 class BatchClassifyRequest(BaseModel):
     texts: list[str]
+
+    @field_validator("texts")
+    @classmethod
+    def validate_batch_size(cls, v):
+        if len(v) > MAX_BATCH_SIZE:
+            raise ValueError(f"Batch size {len(v)} exceeds maximum {MAX_BATCH_SIZE}")
+        if len(v) == 0:
+            raise ValueError("Batch must contain at least one text")
+        return v
 
 
 class BatchClassifyResponse(BaseModel):
@@ -62,15 +75,25 @@ def init_logging_table():
 
 
 def log_request(input_text: str, prediction: str, confidence: float, latency_ms: float):
-    con = duckdb.connect(DB_PATH)
-    con.execute(
-        """
-        INSERT INTO request_log (input_text, prediction, confidence, latency_ms)
-        VALUES (?, ?, ?, ?)
-    """,
-        [input_text, prediction, confidence, latency_ms],
-    )
-    con.close()
+    try:
+        con = duckdb.connect(DB_PATH)
+        con.execute(
+            """
+            INSERT INTO request_log (input_text, prediction, confidence, latency_ms)
+            VALUES (?, ?, ?, ?)
+        """,
+            [input_text, prediction, confidence, latency_ms],
+        )
+        con.close()
+    except Exception:
+        logger.exception("Failed to log request")
+
+
+def log_batch(texts: list[str], responses: list) -> None:
+    for i, text in enumerate(texts):
+        log_request(
+            text, responses[i].label, responses[i].confidence, responses[i].latency_ms
+        )
 
 
 @asynccontextmanager
@@ -107,7 +130,7 @@ def _run_inference(text: str) -> tuple[str, float, dict, float]:
         return_tensors="np",
     )
     logits = app.state.model(**encoded).logits
-    probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
+    probs = softmax(logits, axis=1)
     probs = probs.squeeze()
     pred_idx = int(np.argmax(probs))
     latency_ms = (time.perf_counter() - t0) * 1000
@@ -127,7 +150,7 @@ def _run_batch_inference(texts: list[str]) -> list[tuple[str, float, dict, float
         return_tensors="np",
     )
     logits = app.state.model(**encoded).logits
-    probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
+    probs = softmax(logits, axis=1)
     total_ms = (time.perf_counter() - t0) * 1000
     per_item_ms = total_ms / len(texts)
     results = []
@@ -175,18 +198,7 @@ async def classify_batch(request: BatchClassifyRequest):
         )
         for label, confidence, scores, latency_ms in results
     ]
-    loop.run_in_executor(
-        None,
-        lambda: [
-            log_request(
-                request.texts[i],
-                responses[i].label,
-                responses[i].confidence,
-                responses[i].latency_ms,
-            )
-            for i in range(len(responses))
-        ],
-    )
+    loop.run_in_executor(None, log_batch, request.texts, responses)
     return BatchClassifyResponse(
         results=responses,
         total_texts=len(responses),

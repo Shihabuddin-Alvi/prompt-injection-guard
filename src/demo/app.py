@@ -1,8 +1,8 @@
 import os
 
 import gradio as gr
-import numpy as np
 import onnxruntime as ort
+from scipy.special import softmax
 from dotenv import load_dotenv
 from huggingface_hub import hf_hub_download
 from transformers import AutoTokenizer
@@ -41,7 +41,7 @@ def classify(text: str) -> dict:
     valid_inputs = {i.name for i in session.get_inputs()}
     inputs = {k: v for k, v in encoded.items() if k in valid_inputs}
     logits = session.run(None, inputs)[0]
-    probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
+    probs = softmax(logits, axis=1)
     probs = probs.squeeze()
     return {LABELS[i]: float(probs[i]) for i in range(len(LABELS))}
 

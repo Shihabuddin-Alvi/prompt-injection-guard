@@ -1,9 +1,11 @@
 """Fine-tune DeBERTa-v3-base for prompt injection classification."""
 
 import argparse
+import random
 
 import duckdb
 import numpy as np
+import torch
 import pandas as pd
 from datasets import Dataset
 from sklearn.metrics import f1_score
@@ -66,6 +68,13 @@ def train(
     learning_rate: float = 2e-5,
     batch_size: int = 16,
 ):
+    seed = 42
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
     print(f"Loading model: {MODEL_NAME}")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, num_labels=2)

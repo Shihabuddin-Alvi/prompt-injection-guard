@@ -5,6 +5,7 @@ from pathlib import Path
 import duckdb
 import numpy as np
 from optimum.onnxruntime import ORTModelForSequenceClassification
+from scipy.special import softmax
 from transformers import AutoTokenizer
 from dotenv import load_dotenv
 
@@ -40,7 +41,7 @@ def run():
             return_tensors="np",
         )
         logits = model(**encoded).logits
-        probs = np.exp(logits) / np.sum(np.exp(logits), axis=1, keepdims=True)
+        probs = softmax(logits, axis=1)
         preds = np.argmax(probs, axis=1)
 
         for j, row in enumerate(batch):
