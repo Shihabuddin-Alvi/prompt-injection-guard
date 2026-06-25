@@ -14,6 +14,7 @@ import pandas as pd
 
 DB_PATH = "data/unified.duckdb"
 MAX_LENGTH = 256
+BASELINE_F1 = 0.93  # Claude Haiku zero-shot baseline
 
 
 def load_test_set(db_path: str) -> pd.DataFrame:
@@ -71,7 +72,7 @@ def bootstrap_f1_ci(
     return float(lower), float(upper)
 
 
-def evaluate(model_path: str, output_path: str = "docs/eval_results.json"):
+def evaluate(model_path: str, output_path: str = "docs/eval_results.json") -> None:
     print(f"Loading test set from {DB_PATH}")
     df = load_test_set(DB_PATH)
     print(f"Test set size: {len(df)}")
@@ -112,10 +113,14 @@ def evaluate(model_path: str, output_path: str = "docs/eval_results.json"):
     print(f"\nResults saved to {output_path}")
 
     print("\n--- GATE RESULT ---")
-    if macro_f1 >= 0.85:
-        print(f"PASSED: macro F1 {macro_f1:.4f} >= 0.85")
+    if macro_f1 >= BASELINE_F1:
+        print(
+            f"PASSED: macro F1 {macro_f1:.4f} >= {BASELINE_F1} (Haiku zero-shot baseline)"
+        )
     else:
-        print(f"FAILED: macro F1 {macro_f1:.4f} < 0.85")
+        print(
+            f"FAILED: macro F1 {macro_f1:.4f} < {BASELINE_F1} (Haiku zero-shot baseline)"
+        )
 
 
 if __name__ == "__main__":

@@ -55,7 +55,7 @@ def tokenize(df: pd.DataFrame, tokenizer: AutoTokenizer) -> Dataset:
     return dataset.map(tokenize_fn, batched=True, remove_columns=["text"])
 
 
-def compute_metrics(eval_pred):
+def compute_metrics(eval_pred: tuple) -> dict[str, float]:
     logits, labels = eval_pred
     preds = np.argmax(logits, axis=1)
     return {"macro_f1": f1_score(labels, preds, average="macro")}
@@ -67,7 +67,7 @@ def train(
     num_epochs: int = 3,
     learning_rate: float = 2e-5,
     batch_size: int = 16,
-):
+) -> None:
     seed = 42
     random.seed(seed)
     np.random.seed(seed)
