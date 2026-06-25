@@ -9,7 +9,7 @@ train:
 	uv run python -m src.models.train --output-dir checkpoints/v1
 
 train-v2:
-	uv run python -m src.models.train --output-dir checkpoints/v2 --db-split split_train_v2
+	uv run python -m src.models.train --output-dir checkpoints/v2
 
 eval:
 	uv run python -m src.eval.evaluate --model-path checkpoints/v1 --output docs/eval_results.json
