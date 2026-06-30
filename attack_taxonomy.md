@@ -1,5 +1,8 @@
 # Prompt Injection Attack Taxonomy
 
+Version: 1.0
+Owner: Prompt Injection Guard
+
 Reference document for Prompt Injection Guard. It defines the attack families the classifier must detect, split into training families and held-out families.
 
 Held-out families never appear in training data. They exist to answer one question: does the classifier learn the concept of injection, or does it memorize surface patterns? A classifier that scores well on training families but fails on held-out families has memorized. A classifier that generalizes to held-out families has learned.
