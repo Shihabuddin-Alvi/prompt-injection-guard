@@ -15,13 +15,13 @@ Built as part of a 35-day portfolio project targeting the Anthropic Safeguards M
 
 ## Training Data
 
-Four public datasets unified into a single DuckDB schema:
+Three public datasets unified into a single DuckDB schema:
 
 | Source | Examples |
 |--------|----------|
 | jasperai/prompt-injections | 653 |
 | lakera/gandalf | 999 |
-| allenai/wildjailbreak (safeguard split) | 10,038 |
+| xTRam1/safe-guard-prompt-injection | 10,038 |
 
 Total after deduplication (MinHash LSH): 11,690 examples.
 Train/val/test split: 70/15/15, stratified by attack category.

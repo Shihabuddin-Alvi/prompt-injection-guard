@@ -8,7 +8,7 @@ A prompt injection classifier built with a complete ML iteration loop — train,
 
 Most fine-tuned classifiers stop at "train on available data, evaluate, ship." This project runs the full iteration:
 
-1. **Curate** — unified 4 public datasets (11,690 examples after MinHash dedup) into a single DuckDB schema
+1. **Curate** — unified 3 public datasets (11,690 examples after MinHash dedup) into a single DuckDB schema
 2. **Train v1** — DeBERTa-v3-base, macro F1 0.9957 on 1,754 held-out examples
 3. **Analyze failures** — read every misclassification (17 total), grouped into 8 failure patterns
 4. **Generate synthetic data** — one targeted prompt template per failure cluster, 1,700 examples via Claude Sonnet
@@ -163,9 +163,9 @@ See [docs/training.md](docs/training.md) for training environment and hyperparam
 
 | Dataset | Examples | Source |
 |---------|----------|--------|
-| jasperai/prompt-injections | 662 | HF Hub |
-| Lakera Gandalf | 1,000 | HF Hub |
-| xTRam1/safe-guard-prompt-injection | 10,296 | HF Hub |
+| jasperai/prompt-injections | 653 | HF Hub |
+| Lakera Gandalf | 999 | HF Hub |
+| xTRam1/safe-guard-prompt-injection | 10,038 | HF Hub |
 | WildGuardMix (held-out benchmark) | — | HF Hub |
 
 Total after MinHash LSH deduplication: 11,690 examples. Schema and dedup methodology: [docs/data.md](docs/data.md)

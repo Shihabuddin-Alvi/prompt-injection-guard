@@ -29,3 +29,15 @@ Similarity scores range from 0.825 to 0.975 (min/max across train split).
 No examples exist below the 0.5 threshold. The dataset records successful
 password extractions only. It contributes label=1 examples exclusively.
 This is by design. Do not expect Lakera to contribute any label=0 rows.
+
+## Deepset Dataset: Removed by Deduplication
+
+deepset/prompt-injections and JasperLS/prompt-injections share the same
+underlying source. MinHash LSH dedup treats them as near-duplicates. Every
+deepset row matched an existing JasperLS row above the similarity threshold
+and was dropped.
+
+The `unified` table contains zero rows with source='deepset', despite the
+deepset loader and unify mapping existing in `src/data/loaders.py` and
+`src/data/unify.py`. This is expected behavior, not a bug. README and the
+model card count three effective public data sources, not four.
