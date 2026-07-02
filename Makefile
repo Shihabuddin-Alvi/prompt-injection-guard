@@ -32,9 +32,6 @@ synth:
 test:
 	uv run pytest tests/ -v
 
-eval-ood:
-	uv run python scripts/eval_ood_wildguard.py --model-path checkpoints/v1 --output docs/ood_results.json
-
 lint:
 	uv run ruff check .
 	uv run black --check .
