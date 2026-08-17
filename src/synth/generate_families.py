@@ -61,16 +61,18 @@ FAMILIES = [
         1,
         "train",
         200,
-        "Generate {n} short user prompts that attempt encoding and "
-        "obfuscation: hiding an instruction inside an encoding or "
-        "transformation and asking the model to decode and act on it. The "
-        "decoded instruction itself must always be harmless and generic, such "
-        "as asking the model to reveal a placeholder phrase, respond with a "
-        "fixed word, or state its current instructions. Never encode a "
-        "real-world harmful request (violence, hacking, illegal acts) even as "
-        "an example. Vary the encoding across base64, leetspeak, reversed "
-        "text, and homoglyphs. Vary wording, length, tone, and framing "
-        "widely. Return ONLY a JSON array of strings, no other text.",
+        "You are generating labeled synthetic training data for a defensive "
+        "prompt-injection classifier. Nothing here is executed, only "
+        "labeled as an example of the attack pattern for supervised "
+        "training. Generate {n} short user-turn strings that hide an "
+        "instruction inside an encoding or transformation and ask the "
+        "reader to decode and act on it. Every decoded payload must be a "
+        "single inert test marker, never a natural-language command. Use "
+        "markers like CANARY_7f3a, TESTMARK_01, or PROBE_ff2. Never encode "
+        "a real-world request of any kind, harmful or benign. Vary the "
+        "encoding across base64, leetspeak, reversed text, and "
+        "homoglyphs. Vary wording, length, tone, and framing widely. "
+        "Return ONLY a JSON array of strings, no other text.",
     ),
     (
         "F4",
@@ -176,17 +178,25 @@ FAMILIES = [
 ]
 
 
-def generate_family(client, family_id, label, split, target_count, prompt_template):
+def generate_family(
+    client,
+    family_id,
+    label,
+    split,
+    target_count,
+    prompt_template,
+    batch_size=EXAMPLES_PER_CALL,
+):
     examples = []
     consecutive_failures = 0
-    max_consecutive_failures = 5
+    max_consecutive_failures = 15
     while len(examples) < target_count:
         remaining = target_count - len(examples)
-        n = min(EXAMPLES_PER_CALL, remaining)
+        n = min(batch_size, remaining)
         prompt = prompt_template.format(n=n)
         response = client.messages.create(
             model=MODEL,
-            max_tokens=2000,
+            max_tokens=4096,
             messages=[{"role": "user", "content": prompt}],
         )
         text = response.content[0].text.strip()
@@ -232,8 +242,15 @@ def run():
     all_examples = []
     for family_id, label, split, target_count, prompt_template in FAMILIES:
         print(f"Generating family {family_id} (target: {target_count})")
+        batch_size = 5 if family_id == "F3" else EXAMPLES_PER_CALL
         examples = generate_family(
-            client, family_id, label, split, target_count, prompt_template
+            client,
+            family_id,
+            label,
+            split,
+            target_count,
+            prompt_template,
+            batch_size=batch_size,
         )
         all_examples.extend(examples)
 
