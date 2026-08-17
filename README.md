@@ -23,9 +23,9 @@ Most fine-tuned classifiers stop at "train on available data, evaluate, ship." T
 
 | Metric | Claude Haiku (zero-shot) | DeBERTa v1 (fine-tuned) |
 |--------|--------------------------|--------------------------|
-| Macro F1 | 0.93 | **0.9957** |
-| Injection recall | 0.85 | **1.00** |
-| Injection precision | 0.99 | 0.99 |
+| Macro F1 | 0.930 | **0.9957** |
+| Injection recall | 0.850 | **1.00** |
+| Injection precision | 0.990 | 0.99 |
 
 Haiku misses 15% of injections at zero-shot. The fine-tuned classifier closes that gap. Baseline documented in [`src/eval/baseline.py`](src/eval/baseline.py).
 
@@ -33,7 +33,7 @@ Haiku misses 15% of injections at zero-shot. The fine-tuned classifier closes th
 
 | Metric | Score |
 |--------|-------|
-| Macro F1 | 0.9957 |
+| Macro F1 | 0.99570 |
 | 95% Bootstrap CI | (0.9924, 0.9982) |
 | Injection recall | 1.00 |
 | Injection precision | 0.99 |
