@@ -23,6 +23,9 @@ dependencies = [
     "uvicorn>=0.49.0",
 ]
 
+[tool.black]
+target-version = ["py311"]
+
 [dependency-groups]
 dev = [
     "black>=26.5.1",

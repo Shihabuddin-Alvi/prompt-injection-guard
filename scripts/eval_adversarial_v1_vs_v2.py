@@ -15,13 +15,11 @@ HF_TOKEN = os.environ["HF_TOKEN"]
 
 def build_adversarial_slice() -> tuple[list[str], np.ndarray]:
     con = duckdb.connect("data/unified.duckdb")
-    df = con.execute(
-        """
+    df = con.execute("""
         SELECT input_text, label
         FROM split_val
         WHERE attack_category IN ('role_play', 'indirect') OR label = 1
-        """
-    ).fetchdf()
+        """).fetchdf()
     con.close()
     return df["input_text"].tolist(), df["label"].astype(int).to_numpy()
 

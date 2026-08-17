@@ -62,14 +62,12 @@ def test_label_distribution_not_degenerate(con):
 
 
 def test_no_conflicting_labels(con):
-    conflicts = con.execute(
-        """
+    conflicts = con.execute("""
         SELECT COUNT(*) FROM (
             SELECT input_text
             FROM unified
             GROUP BY input_text
             HAVING COUNT(DISTINCT label) > 1
         )
-    """
-    ).fetchone()[0]
+    """).fetchone()[0]
     assert conflicts == 0

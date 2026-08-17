@@ -59,8 +59,7 @@ class BatchClassifyResponse(BaseModel):
 
 def init_logging_table():
     con = duckdb.connect(DB_PATH)
-    con.execute(
-        """
+    con.execute("""
         CREATE TABLE IF NOT EXISTS request_log (
             id INTEGER,
             input_text TEXT,
@@ -69,8 +68,7 @@ def init_logging_table():
             latency_ms FLOAT,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
-    """
-    )
+    """)
     con.close()
 
 

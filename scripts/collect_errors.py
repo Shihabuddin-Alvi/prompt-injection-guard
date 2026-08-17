@@ -73,8 +73,7 @@ def run():
     )
 
     con.execute("DROP TABLE IF EXISTS v1_errors")
-    con.execute(
-        """
+    con.execute("""
         CREATE TABLE v1_errors (
             id TEXT,
             input_text TEXT,
@@ -84,8 +83,7 @@ def run():
             attack_category TEXT,
             confidence FLOAT
         )
-    """
-    )
+    """)
     for e in errors:
         con.execute(
             "INSERT INTO v1_errors VALUES (?, ?, ?, ?, ?, ?, ?)",

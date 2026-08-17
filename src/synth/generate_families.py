@@ -17,7 +17,6 @@ from typing import Any
 import anthropic
 from dotenv import load_dotenv
 
-
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
